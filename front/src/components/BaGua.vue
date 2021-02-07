@@ -1,12 +1,55 @@
 <template>
   <div>
     <div>
-      <el-row><Yao :yao="Gua.shang" /> </el-row>
-      <el-row><Yao :yao="Gua.wu" /> </el-row>
-      <el-row><Yao :yao="Gua.si" /> </el-row>
-      <el-row><Yao :yao="Gua.san" /> </el-row>
-      <el-row><Yao :yao="Gua.er" /> </el-row>
-      <el-row><Yao :yao="Gua.chu" /> </el-row>
+      <el-row
+        ><el-tooltip
+          class="item"
+          effect="dark"
+          :content="YaoCi[5]"
+          placement="right"
+          ><Yao :yao="Gua.shang"
+        /></el-tooltip>
+      </el-row>
+      <el-row
+        ><el-tooltip
+          class="item"
+          effect="dark"
+          :content="YaoCi[4]"
+          placement="right"
+          ><Yao :yao="Gua.wu" /></el-tooltip
+      ></el-row>
+      <el-row
+        ><el-tooltip
+          class="item"
+          effect="dark"
+          :content="YaoCi[3]"
+          placement="right"
+          ><Yao :yao="Gua.si" /></el-tooltip
+      ></el-row>
+      <el-row
+        ><el-tooltip
+          class="item"
+          effect="dark"
+          :content="YaoCi[2]"
+          placement="right"
+          ><Yao :yao="Gua.san" /></el-tooltip
+      ></el-row>
+      <el-row
+        ><el-tooltip
+          class="item"
+          effect="dark"
+          :content="YaoCi[1]"
+          placement="right"
+          ><Yao :yao="Gua.er" /></el-tooltip
+      ></el-row>
+      <el-row
+        ><el-tooltip
+          class="item"
+          effect="dark"
+          :content="YaoCi[0]"
+          placement="right"
+          ><Yao :yao="Gua.chu" /></el-tooltip
+      ></el-row>
     </div>
   </div>
 </template>
@@ -19,6 +62,7 @@ export default {
   props: {
     guaID: String,
     Gua: Object,
+    YaoCi: Array,
   },
   components: {
     Yao,
@@ -34,6 +78,7 @@ export default {
         change: false,
       },
       ci: '',
+      yaoci: [],
     };
   },
   mounted() {
@@ -42,6 +87,7 @@ export default {
     console.log(dataci);
     this.ci = dataci.guaci;
     this.name = dataci.name;
+    this.yaoci = dataci.yaoci;
   },
   methods: {},
 };
@@ -50,5 +96,8 @@ export default {
 <style scoped>
 .el-row {
   margin-bottom: 20px;
+}
+.yao-ci {
+  text-align: left;
 }
 </style>

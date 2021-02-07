@@ -12,7 +12,7 @@
     </div>
     <div style="display: flex; justify-content: center">
       <div style="width: 500px">
-        <el-row v-if="show"><BaGua :Gua="gua" /> </el-row>
+        <el-row v-if="show"><BaGua :Gua="gua" :YaoCi="yaoci" /> </el-row>
       </div>
     </div>
     <div>
@@ -60,6 +60,7 @@ export default {
       name: '',
       ci: '',
       tuan: '',
+      yaoci: [],
     };
   },
   methods: {
@@ -92,6 +93,7 @@ export default {
       this.ci = dataci.guaci;
       this.name = dataci.name;
       this.tuan = dataci.tuan;
+      this.yaoci = dataci.yaoci;
       this.show = true;
     },
   },
