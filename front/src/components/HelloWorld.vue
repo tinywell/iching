@@ -2,12 +2,15 @@
   <el-main>
     <div>
       <el-row>
-        <el-col :span="12" :offset="6"
-          ><el-input placeholder="请输入问题"></el-input
-        ></el-col>
+        <el-col :span="12" :offset="6"><label>默念所卜事项</label></el-col>
       </el-row>
       <el-row style="margin: 5px">
-        <el-button type="danger" round @click="submit">开始</el-button>
+        <el-button type="danger" circle @click="submit">卜</el-button>
+        <!-- <img
+          src="../assets/taiji.png"
+          style="height: 30px; width: 30px"
+          @click="submit"
+        /> -->
       </el-row>
     </div>
     <div style="display: flex; justify-content: center">
@@ -19,9 +22,9 @@
       <el-row>
         <el-col :span="12" :offset="6">
           <el-row style="text-align: left">
-            <span style="width: 100px; font-size: xxx-large">{{
-              this.name
-            }}</span>
+            <span style="width: 100px; font-size: xxx-large"
+              >{{ this.name }}{{ this.fu }}</span
+            >
             <span>{{ this.ci }}</span>
           </el-row>
           <el-row style="text-align: left">
@@ -49,17 +52,18 @@ export default {
     return {
       gua: {
         shang: { yi: true, change: false },
-        wu: { yi: true, change: false },
+        wu: { yi: false, change: false },
         si: { yi: true, change: false },
-        san: { yi: true, change: false },
+        san: { yi: false, change: false },
         er: { yi: false, change: false },
-        chu: { yi: true, change: false },
-        id: '111101',
+        chu: { yi: false, change: false },
+        id: '101000',
       },
       show: false,
       name: '',
       ci: '',
       tuan: '',
+      fu: '',
       yaoci: [],
     };
   },
@@ -94,6 +98,7 @@ export default {
       this.name = dataci.name;
       this.tuan = dataci.tuan;
       this.yaoci = dataci.yaoci;
+      this.fu = dataci.fu;
       this.show = true;
     },
   },
@@ -102,4 +107,7 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.button_qigua {
+  background-image: "../assets/taiji.png";
+}
 </style>
