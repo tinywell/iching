@@ -64,3 +64,15 @@ type Gua struct {
 	Chu   Yao    `json:"chu" db:"chu"`
 	ID    string `json:"id" db:"id"`
 }
+
+// GenerateID ...
+func (g Gua) GenerateID() string {
+	ids := []string{
+		strconv.Itoa(g.Shang.Yi),
+		strconv.Itoa(g.Wu.Yi),
+		strconv.Itoa(g.Si.Yi),
+		strconv.Itoa(g.San.Yi),
+		strconv.Itoa(g.Er.Yi),
+		strconv.Itoa(g.Chu.Yi)}
+	return strings.Join(ids, "")
+}

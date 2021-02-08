@@ -3,7 +3,6 @@ package pkg
 import (
 	"crypto/rand"
 	"math/big"
-	"strings"
 )
 
 const (
@@ -70,17 +69,13 @@ func BuGua() XiaoGua {
 
 // Bu 卜卦
 func Bu() Gua {
-	shang := BuGua()
-	xia := BuGua()
-	gua := Gua{
-		Shang: shang.One,
-		Wu:    shang.Two,
-		Si:    shang.Three,
-		San:   xia.One,
-		Er:    xia.Two,
-		Chu:   xia.Three,
-	}
-	ids := []string{shang.ID(), xia.ID()}
-	gua.ID = strings.Join(ids, "")
+	gua := Gua{}
+	gua.Chu = NewYao(yao())
+	gua.Er = NewYao(yao())
+	gua.San = NewYao(yao())
+	gua.Si = NewYao(yao())
+	gua.Wu = NewYao(yao())
+	gua.Shang = NewYao(yao())
+	gua.ID = gua.GenerateID()
 	return gua
 }
