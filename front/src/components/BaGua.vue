@@ -56,7 +56,7 @@
 
 <script>
 import Yao from './Yao.vue';
-import GuaCi from '../assets/guaci.json';
+// import GuaCi from '../assets/guaci.json';
 
 export default {
   props: {
@@ -82,12 +82,12 @@ export default {
     };
   },
   mounted() {
-    console.log(this.Gua);
-    const dataci = GuaCi[this.Gua.id];
-    console.log(dataci);
-    this.ci = dataci.guaci;
-    this.name = dataci.name;
-    this.yaoci = dataci.yaoci;
+    console.log('BaGua:', this.Gua);
+    // const dataci = GuaCi[this.Gua.id];
+    // console.log(dataci);
+    // this.ci = dataci.guaci;
+    // this.name = dataci.name;
+    // this.yaoci = dataci.yaoci;
   },
   methods: {},
 };
