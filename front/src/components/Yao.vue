@@ -23,9 +23,16 @@ export default {
   computed: {
     classObject() {
       console.log('conputed class', this.yao.change);
-      if (this.yao.change) {
+      if (this.yao.ji === 9) {
+        // 老阳
         return {
           'background-color': '#d0b2b2',
+        };
+      }
+      if (this.yao.ji === 6) {
+        // 少阴
+        return {
+          'background-color': '#a0bddc',
         };
       }
       return {};
