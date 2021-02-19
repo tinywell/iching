@@ -16,10 +16,13 @@
     <div style="display: flex; justify-content: center">
       <div style="width: 500px">
         <el-row v-if="show"><BaGua :Gua="gua" :YaoCi="yaoci" /> </el-row>
+        <el-row v-if="show"
+          ><el-tag type="info"><i class="el-icon-info"></i>{{ tip }}</el-tag>
+        </el-row>
       </div>
     </div>
     <div>
-      <el-row>
+      <el-row v-if="show">
         <el-col :span="12" :offset="6">
           <el-row style="text-align: left">
             <span style="width: 100px; font-size: xxx-large"
@@ -27,9 +30,7 @@
             >
             <span>{{ this.ci }}</span>
           </el-row>
-          <el-row style="text-align: left">
-            {{ this.tuan }}
-          </el-row>
+          <el-row style="text-align: left"> 彖：{{ this.tuan }} </el-row>
         </el-col></el-row
       >
     </div>
@@ -65,6 +66,16 @@ export default {
       tuan: '',
       fu: '',
       yaoci: [],
+      tips: [
+        '六爻安定的，以本卦卦辞断之。',
+        '一爻动，以动爻之爻辞断之。',
+        '两爻动者，则取阴爻之爻辞以为断，盖以“阳主过去，阴主未来”故也。所动的两爻如果同是阳爻或阴爻，则取上动之爻断之。',
+        '三爻动者，以所动三爻的中间一爻之爻辞为断。',
+        '四爻动者，以下静之爻辞断之。',
+        '五爻动者，取静爻的爻辞断之。',
+        '六爻皆动的卦，如果是乾坤二卦，「用」辞断。乾坤两卦外其余各卦，如果是六爻皆动，则以变卦的彖辞断之。',
+      ],
+      tip: '',
     };
   },
   methods: {
@@ -99,6 +110,21 @@ export default {
       this.tuan = dataci.tuan;
       this.yaoci = dataci.yaoci;
       this.fu = dataci.fu;
+      const yaos = [
+        data.data.chu,
+        data.data.er,
+        data.data.san,
+        data.data.si,
+        data.data.wu,
+        data.data.shang,
+      ];
+      let bian = 0;
+      yaos.forEach((value) => {
+        if (value.change) {
+          bian += 1;
+        }
+      });
+      this.tip = this.tips[bian];
       this.show = true;
     },
   },
