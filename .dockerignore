@@ -1,0 +1,12 @@
+.git
+
+front/node_modules
+npm-debug.log
+
+cmd
+api
+pkg
+
+docs
+tmp
+./docker
