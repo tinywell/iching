@@ -40,6 +40,7 @@
 <script>
 import BaGua from './BaGua.vue';
 import GuaCi from '../assets/guaci.json';
+import * as iching from '../pkg/iching';
 
 export default {
   name: 'HelloWorld',
@@ -80,44 +81,33 @@ export default {
   },
   methods: {
     submit() {
-      let ServerAddrPre = '/api'; // eslint-disable-line no-unused-vars
-      if (process.env.NODE_ENV === 'development') {
-        ServerAddrPre = 'http://localhost:8080/api';
-      }
-      const post = `${ServerAddrPre}/bugua`;
-      this.$axios
-        .get(post)
-        .then((rsp) => {
-          // if (rsp.data.code === 200) {
-          this.handleData(rsp);
-          // } else {
-          //   this.$message({
-          //     message: `请求数据出错：${rsp.data.msg}`,
-          //     type: 'warnning',
-          //   });
-          // }
-        })
-        .catch((err) => {
-          this.$message.error(err.message);
-        });
+      // let ServerAddrPre = '/api'; // eslint-disable-line no-unused-vars
+      // if (process.env.NODE_ENV === 'development') {
+      //   ServerAddrPre = 'http://localhost:8080/api';
+      // }
+      // const post = `${ServerAddrPre}/bugua`;
+      // this.$axios
+      //   .get(post)
+      //   .then((rsp) => {
+      //     // if (rsp.data.code === 200) {
+      //     this.handleData(rsp.data);
+      //   })
+      //   .catch((err) => {
+      //     this.$message.error(err.message);
+      //   });
+      const gua = iching.Gua();
+      this.handleData(gua);
     },
     handleData(data) {
       console.log('解析：', data);
-      this.gua = data.data;
+      this.gua = data;
       const dataci = GuaCi[this.gua.id];
       this.ci = dataci.guaci;
       this.name = dataci.name;
       this.tuan = dataci.tuan;
       this.yaoci = dataci.yaoci;
       this.fu = dataci.fu;
-      const yaos = [
-        data.data.chu,
-        data.data.er,
-        data.data.san,
-        data.data.si,
-        data.data.wu,
-        data.data.shang,
-      ];
+      const yaos = [data.chu, data.er, data.san, data.si, data.wu, data.shang];
       let bian = 0;
       yaos.forEach((value) => {
         if (value.change) {

@@ -22,7 +22,7 @@ export default {
   mounted() {},
   computed: {
     classObject() {
-      console.log('conputed class', this.yao.change);
+      // console.log('conputed class', this.yao.change);
       if (this.yao.ji === 9) {
         // 老阳
         return {
@@ -30,7 +30,7 @@ export default {
         };
       }
       if (this.yao.ji === 6) {
-        // 少阴
+        // 老阴
         return {
           'background-color': '#a0bddc',
         };
