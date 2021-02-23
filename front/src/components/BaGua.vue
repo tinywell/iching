@@ -6,7 +6,7 @@
           class="item"
           effect="dark"
           :content="YaoCi[5]"
-          placement="right"
+          placement="bottom-start"
           ><Yao :yao="Gua.shang"
         /></el-tooltip>
       </el-row>
@@ -15,7 +15,7 @@
           class="item"
           effect="dark"
           :content="YaoCi[4]"
-          placement="right"
+          placement="bottom-start"
           ><Yao :yao="Gua.wu" /></el-tooltip
       ></el-row>
       <el-row
@@ -23,7 +23,7 @@
           class="item"
           effect="dark"
           :content="YaoCi[3]"
-          placement="right"
+          placement="bottom-start"
           ><Yao :yao="Gua.si" /></el-tooltip
       ></el-row>
       <el-row
@@ -31,7 +31,7 @@
           class="item"
           effect="dark"
           :content="YaoCi[2]"
-          placement="right"
+          placement="bottom-start"
           ><Yao :yao="Gua.san" /></el-tooltip
       ></el-row>
       <el-row
@@ -39,7 +39,7 @@
           class="item"
           effect="dark"
           :content="YaoCi[1]"
-          placement="right"
+          placement="bottom-start"
           ><Yao :yao="Gua.er" /></el-tooltip
       ></el-row>
       <el-row
@@ -47,7 +47,7 @@
           class="item"
           effect="dark"
           :content="YaoCi[0]"
-          placement="right"
+          placement="bottom-start"
           ><Yao :yao="Gua.chu" /></el-tooltip
       ></el-row>
     </div>
