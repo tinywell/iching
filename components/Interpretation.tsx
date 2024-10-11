@@ -1,4 +1,5 @@
-import { Box, Text, VStack } from '@chakra-ui/react';
+import { Box, Text, VStack, Heading } from '@chakra-ui/react';
+import guaciData from '../public/data/guaci.json';
 
 type HexagramLine = 6 | 7 | 8 | 9;
 type Hexagram = HexagramLine[];
@@ -18,23 +19,33 @@ const Interpretation: React.FC<InterpretationProps> = ({ hexagram }) => {
     }
   };
 
+  const hexagramKey = hexagram.map(line => line % 2 === 0 ? '0' : '1').reverse().join('');
+  const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
+
   return (
     <Box mt={8}>
-      <Text fontSize="xl" fontWeight="bold">
-        Interpretation
-      </Text>
-      <VStack align="start" mt={2}>
-        {hexagram.map((line, index) => (
-          <Text key={index}>
-            第{index + 1}爻: {interpretLine(line)}
-          </Text>
-        ))}
-      </VStack>
-      <Text mt={4}>
-        This is a placeholder for a more detailed hexagram interpretation.
-        In the future, this will be replaced with an AI-generated interpretation
-        based on the specific hexagram and its changing lines.
-      </Text>
+      <Heading as="h2" size="lg" mb={4}>
+        卦象解释
+      </Heading>
+      {hexagramInfo ? (
+        <VStack align="start" spacing={4}>
+          <Text><strong>卦名：</strong>{hexagramInfo.name} <Text as="span" fontSize="3xl">({hexagramInfo.fu})</Text></Text>
+          <Text><strong>卦辞：</strong>{hexagramInfo.guaci}</Text>
+          <Text><strong>彖辞：</strong>{hexagramInfo.tuan}</Text>
+          <Heading as="h3" size="md" mt={2}>爻辞</Heading>
+          {hexagram.map((line, index) => (
+            <Text key={index}>
+              第{index + 1}爻 ({interpretLine(line)}): {hexagramInfo.yaoci[index]}
+            </Text>
+          ))}
+          <Heading as="h3" size="md" mt={2}>象辞</Heading>
+          {hexagramInfo.xiang.map((xiang, index) => (
+            <Text key={index}>{xiang}</Text>
+          ))}
+        </VStack>
+      ) : (
+        <Text>无法找到对应的卦象信息。</Text>
+      )}
     </Box>
   );
 };
