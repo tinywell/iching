@@ -1,7 +1,14 @@
 import { Box, Text, VStack } from '@chakra-ui/react';
 
-const Interpretation = ({ hexagram }) => {
-  const interpretLine = (value) => {
+type HexagramLine = 6 | 7 | 8 | 9;
+type Hexagram = HexagramLine[];
+
+interface InterpretationProps {
+  hexagram: Hexagram;
+}
+
+const Interpretation: React.FC<InterpretationProps> = ({ hexagram }) => {
+  const interpretLine = (value: HexagramLine): string => {
     switch (value) {
       case 6: return '老阴 (可能变化)';
       case 7: return '少阳 (不变)';

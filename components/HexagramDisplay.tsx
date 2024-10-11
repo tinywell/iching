@@ -2,8 +2,15 @@ import { useState, useEffect } from 'react';
 import { Box, VStack } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const HexagramDisplay = ({ hexagram }) => {
-  const [visibleLines, setVisibleLines] = useState(0);
+type HexagramLine = 6 | 7 | 8 | 9;
+type Hexagram = HexagramLine[];
+
+interface HexagramDisplayProps {
+  hexagram: Hexagram;
+}
+
+const HexagramDisplay: React.FC<HexagramDisplayProps> = ({ hexagram }) => {
+  const [visibleLines, setVisibleLines] = useState<number>(0);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,11 +27,11 @@ const HexagramDisplay = ({ hexagram }) => {
     return () => clearInterval(timer);
   }, []);
 
-  const getLineColor = (value) => {
+  const getLineColor = (value: HexagramLine): string => {
     return value === 6 || value === 9 ? 'red.500' : 'black';
   };
 
-  const LineComponent = ({ value }) => {
+  const LineComponent: React.FC<{ value: HexagramLine }> = ({ value }) => {
     const isYang = value === 7 || value === 9;
     const color = getLineColor(value);
 
