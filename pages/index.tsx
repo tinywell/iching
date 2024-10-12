@@ -11,7 +11,7 @@ const generateHexagramUsingYarrowMethod = (): Hexagram => {
   const generateLine = (): HexagramLine => {
     let stalks = 49; // 50根减去1根不用
 
-    const performDivision = (): [number, number, number] => {
+    const performDivination = (): [number, number, number] => {
       const leftHand = Math.floor(Math.random() * stalks);
       const rightHand = stalks - leftHand;
       
@@ -23,13 +23,13 @@ const generateHexagramUsingYarrowMethod = (): Hexagram => {
       return [leftRemainder, rightRemainder, 1];
     };
 
-    const [first1, first2, firstRemoved] = performDivision();
+    const [first1, first2, firstRemoved] = performDivination();
     stalks -= (first1 + first2 + firstRemoved);
 
-    const [second1, second2, secondRemoved] = performDivision();
+    const [second1, second2, secondRemoved] = performDivination();
     stalks -= (second1 + second2 + secondRemoved);
 
-    const [third1, third2, thirdRemoved] = performDivision();
+    const [third1, third2, thirdRemoved] = performDivination();
     stalks -= (third1 + third2 + thirdRemoved);
 
     const total = 49 - (first1 + first2 + second1 + second2 + third1 + third2 + firstRemoved + secondRemoved + thirdRemoved);
@@ -92,7 +92,11 @@ const getAIInterpretation = async (query: string, hexagram: Hexagram, hexagramIn
   return response.choices[0].message.content.trim();
 };
 
-const generateChangedHexagram = (hexagram: Hexagram): Hexagram => {
+const generateChangedHexagram = (hexagram: Hexagram): Hexagram | null => {
+  const changedLines = hexagram.filter(line => line === 6 || line === 9);
+  if (changedLines.length === 0) {
+    return null;
+  }
   return createHexagram(hexagram.map(line => {
     if (line === 6) return 7; // 老阴变少阳
     if (line === 9) return 8; // 老阳变少阴
@@ -158,7 +162,7 @@ export default function Home() {
     const newChangedHexagram = generateChangedHexagram(generatedHexagram);
     setChangedHexagram(newChangedHexagram);
 
-    const newChangingLinesCount = generatedHexagram.filter((line, index) => line !== newChangedHexagram[index]).length;
+    const newChangingLinesCount = generatedHexagram.filter(line => line === 6 || line === 9).length;
     setChangingLinesCount(newChangingLinesCount);
 
     const newInterpretation = getInterpretation(generatedHexagram, newChangedHexagram);
@@ -243,7 +247,7 @@ export default function Home() {
           >
             <Heading as="h3" size="md" mb={2}>解卦依据</Heading>
             <Text fontSize="sm" fontStyle="italic" mb={2}>
-              {getInterpretationReason(interpretation.type, changingLinesCount)}
+              【朱熹解卦法】{getInterpretationReason(interpretation.type, changingLinesCount)}
             </Text>
             <Text mt={2}>{typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}</Text>
           </Box>

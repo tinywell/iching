@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Box, VStack, HStack } from '@chakra-ui/react';
+import { Box, VStack, HStack, Text } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-type HexagramLine = 6 | 7 | 8 | 9;
-type Hexagram = HexagramLine[];
+import { HexagramLine, Hexagram } from '../types/hexagram';
 
 interface HexagramDisplayProps {
   hexagram: Hexagram;
@@ -64,9 +62,9 @@ const HexagramDisplay: React.FC<HexagramDisplayProps> = ({ hexagram, changedHexa
   };
 
   return (
-    <HStack spacing={8} justifyContent="center">
-      <VStack spacing={2} mt={8} height="160px" justifyContent="flex-end">
-        <AnimatePresence>
+    <HStack spacing={8} justifyContent="center" alignItems="flex-end">
+      <VStack spacing={2} height="180px" justifyContent="flex-end">
+        {/* <AnimatePresence> */}
           {hexagram.slice(0, visibleLines).reverse().map((line, index) => (
             <motion.div
               key={index}
@@ -81,10 +79,12 @@ const HexagramDisplay: React.FC<HexagramDisplayProps> = ({ hexagram, changedHexa
               />
             </motion.div>
           ))}
-        </AnimatePresence>
+        {/* </AnimatePresence> */}
+        <Text fontWeight="bold" mb={2}>本卦</Text>
       </VStack>
       {changedHexagram && (
-        <VStack spacing={2} mt={8} height="160px" justifyContent="flex-end">
+        <VStack spacing={2} mt={8} height="180px" justifyContent="flex-end">
+          
           {changedHexagram.slice(0, visibleLines).reverse().map((line, index) => (
             <Box
               key={index}
@@ -93,6 +93,7 @@ const HexagramDisplay: React.FC<HexagramDisplayProps> = ({ hexagram, changedHexa
               <LineComponent value={line} />
             </Box>
           ))}
+          <Text fontWeight="bold" mb={2}>变卦</Text>
         </VStack>
       )}
     </HStack>

@@ -1,4 +1,4 @@
-import { Box, Text, VStack, Heading } from '@chakra-ui/react';
+import { Box, Text, VStack, Heading, Accordion, AccordionItem, AccordionButton, AccordionPanel, AccordionIcon } from '@chakra-ui/react';
 import guaciData from '../public/data/guaci.json';
 import { HexagramLine, Hexagram, InterpretationContent, createHexagram } from '../types/hexagram';
 
@@ -8,11 +8,13 @@ interface InterpretationProps {
   isChangedHexagram: boolean;
 }
 
-export const getInterpretation = (hexagram: Hexagram, changedHexagram: Hexagram | null): InterpretationContent | null => {
+export const getInterpretation = (hexagram: Hexagram, changedHexagram: Hexagram | null): InterpretationContent => {
   const hexagramKey = hexagram.toString();
   const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
 
-  if (!changedHexagram) return null;
+  if (!changedHexagram) { // 本卦 changingLinesCount === 0
+    return { type: '卦辞', content: `本卦卦辞: ${hexagramInfo.guaci}\n本卦彖辞: ${hexagramInfo.tuan}` };
+  }
 
   const changedHexagramKey = changedHexagram.toString();
   const changedHexagramInfo = guaciData[changedHexagramKey as keyof typeof guaciData];
@@ -24,17 +26,16 @@ export const getInterpretation = (hexagram: Hexagram, changedHexagram: Hexagram 
   const changingLines = getChangingLines();
   const changingLinesCount = changingLines.length;
 
-  if (changingLinesCount === 0) {
-    return { type: '卦辞', content: hexagramInfo.guaci };
-  } else if (changingLinesCount === 1) {
+  if (changingLinesCount === 1) {
     return { type: '爻辞', content: hexagramInfo.yaoci[changingLines[0]] };
   } else if (changingLinesCount === 2) {
     const upperChangingLine = Math.max(...changingLines);
-    return { type: '爻辞', content: hexagramInfo.yaoci[upperChangingLine] };
+    const lowerChangingLine = Math.min(...changingLines);
+    return { type: '爻辞', content: `上爻（主）：${hexagramInfo.yaoci[upperChangingLine]}\n下爻：${hexagramInfo.yaoci[lowerChangingLine]}` };
   } else if (changingLinesCount === 3) {
     return { 
       type: '综合解释', 
-      content: `主卦卦辞: ${hexagramInfo.guaci}\n变卦卦辞: ${changedHexagramInfo.guaci}\n主卦彖辞: ${hexagramInfo.tuan}\n变卦彖辞: ${changedHexagramInfo.tuan}`
+      content: `本卦卦辞（主）: ${hexagramInfo.guaci}\n\n变卦卦辞: ${changedHexagramInfo.guaci}\n本卦彖辞: ${hexagramInfo.tuan}\n变卦彖辞: ${changedHexagramInfo.tuan}`
     };
   } else if (changingLinesCount === 4) {
     const unchangedLines = hexagram.map((line, index) => (line === 7 || line === 8) ? index : -1).filter(index => index !== -1);
@@ -42,7 +43,7 @@ export const getInterpretation = (hexagram: Hexagram, changedHexagram: Hexagram 
     const upperUnchangedLine = Math.max(...unchangedLines);
     return { 
       type: '变卦爻辞', 
-      content: `下爻：${changedHexagramInfo.yaoci[lowerUnchangedLine]}（主）\n上爻：${changedHexagramInfo.yaoci[upperUnchangedLine]}`
+      content: `下爻（主）：${changedHexagramInfo.yaoci[lowerUnchangedLine]}\n上爻：${changedHexagramInfo.yaoci[upperUnchangedLine]}`
     };
   } else if (changingLinesCount === 5) {
     const unchangedLine = hexagram.findIndex(line => line === 7 || line === 8);
@@ -53,7 +54,7 @@ export const getInterpretation = (hexagram: Hexagram, changedHexagram: Hexagram 
     } else if (hexagramKey === '000000') {
       return { type: '用六', content: hexagramInfo.yaoci[6] };
     } else {
-      return { type: '卦辞', content: changedHexagramInfo.guaci };
+      return { type: '卦辞', content: `变卦卦辞: ${changedHexagramInfo.guaci}\n变卦彖辞: ${changedHexagramInfo.tuan}` };
     }
   }
 
@@ -77,25 +78,48 @@ const Interpretation: React.FC<InterpretationProps> = ({ hexagram, changedHexagr
   return (
     <Box mt={8}>
       <Heading as="h2" size="lg" mb={4}>
-        {isChangedHexagram ? '变卦' : '本卦'}
+        {isChangedHexagram ? `变卦：${hexagramInfo.name} (${hexagramInfo.fu})` : `本卦：${hexagramInfo.name} (${hexagramInfo.fu})`}
       </Heading>
       {hexagramInfo ? (
         <VStack align="start" spacing={4}>
-          <Text><strong>卦名：</strong>{hexagramInfo.name} (<Text as="span" fontSize="3xl">{hexagramInfo.fu}</Text>)</Text>
-          <Heading as="h3" size="md" mt={2}>卦辞</Heading>
-          <Text>{hexagramInfo.guaci}</Text>
-          <Heading as="h3" size="md" mt={2}>彖辞</Heading>
-          <Text>{hexagramInfo.tuan}</Text>
-          <Heading as="h3" size="md" mt={2}>爻辞</Heading>
-          {hexagram.map((line, index) => (
-            <Text key={index}>
-              第{index + 1}爻 ({interpretLine(line)}): {hexagramInfo.yaoci[index]}
-            </Text>
-          ))}
-          <Heading as="h3" size="md" mt={2}>象辞</Heading>
-          {hexagramInfo.xiang.map((xiang, index) => (
-            <Text key={index}>{xiang}</Text>
-          ))}
+          <Text><strong>卦辞：</strong>{hexagramInfo.guaci}</Text>
+          <Text><strong>彖辞：</strong>{hexagramInfo.tuan}</Text>
+          
+          <Accordion allowMultiple width="100%">
+            <AccordionItem>
+              <h3>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left">
+                    <strong>爻辞</strong>
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h3>
+              <AccordionPanel pb={4}>
+                {hexagram.map((line, index) => (
+                  <Text key={index}>
+                    第{index + 1}爻 ({interpretLine(line)}): {hexagramInfo.yaoci[index]}
+                  </Text>
+                ))}
+              </AccordionPanel>
+            </AccordionItem>
+
+            <AccordionItem>
+              <h3>
+                <AccordionButton>
+                  <Box flex="1" textAlign="left">
+                    <strong>象辞</strong>
+                  </Box>
+                  <AccordionIcon />
+                </AccordionButton>
+              </h3>
+              <AccordionPanel pb={4}>
+                {hexagramInfo.xiang.map((xiang, index) => (
+                  <Text key={index}>{xiang}</Text>
+                ))}
+              </AccordionPanel>
+            </AccordionItem>
+          </Accordion>
         </VStack>
       ) : (
         <Text>无法找到对应的卦象信息。</Text>
