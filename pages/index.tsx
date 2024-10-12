@@ -2,17 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Box, Container, Textarea, VStack, Heading, Button, Text, HStack, Flex, Center } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import HexagramDisplay from '../components/HexagramDisplay';
-import Interpretation from '../components/Interpretation';
+import Interpretation, { getInterpretation } from '../components/Interpretation';
 import guaciData from '../public/data/guaci.json';
 import { OpenAI } from 'openai';
-
-type HexagramLine = 6 | 7 | 8 | 9;
-type Hexagram = HexagramLine[];
+import { HexagramLine, Hexagram, InterpretationContent, createHexagram } from '../types/hexagram';
 
 const generateHexagramUsingYarrowMethod = (): Hexagram => {
   const generateLine = (): HexagramLine => {
     let stalks = 49; // 50根减去1根不用
-    console.log('Initial stalks:', stalks);
 
     const performDivision = (): [number, number, number] => {
       const leftHand = Math.floor(Math.random() * stalks);
@@ -23,27 +20,19 @@ const generateHexagramUsingYarrowMethod = (): Hexagram => {
       const leftRemainder = leftHand % 4 === 0 ? 4 : leftHand % 4;
       const rightRemainder = rightHandAfterRemoval % 4 === 0 ? 4 : rightHandAfterRemoval % 4;
       
-      console.log(`Division: Left ${leftHand}, Right ${rightHand}`);
-      console.log(`After removal: Left ${leftHand}, Right ${rightHandAfterRemoval}`);
-      console.log(`Remainders: Left ${leftRemainder}, Right ${rightRemainder}`);
-      
       return [leftRemainder, rightRemainder, 1];
     };
 
     const [first1, first2, firstRemoved] = performDivision();
     stalks -= (first1 + first2 + firstRemoved);
-    console.log('Stalks after first division:', stalks);
 
     const [second1, second2, secondRemoved] = performDivision();
     stalks -= (second1 + second2 + secondRemoved);
-    console.log('Stalks after second division:', stalks);
 
     const [third1, third2, thirdRemoved] = performDivision();
     stalks -= (third1 + third2 + thirdRemoved);
-    console.log('Stalks after third division:', stalks);
 
     const total = 49 - (first1 + first2 + second1 + second2 + third1 + third2 + firstRemoved + secondRemoved + thirdRemoved);
-    console.log('Total remainders:', total);
 
     let result: HexagramLine;
     if (total === 24) result = 6; // 老阴
@@ -52,18 +41,16 @@ const generateHexagramUsingYarrowMethod = (): Hexagram => {
     else if (total === 36) result = 9; // 老阳
     else throw new Error('Invalid hexagram line generated');
 
-    console.log('Generated line:', result);
     return result;
   };
 
-  const hexagram: Hexagram = [];
+  const hexagram: HexagramLine[] = [];
   for (let i = 0; i < 6; i++) {
-    console.log(`Generating line ${i + 1}`);
     hexagram.push(generateLine());
   }
 
   console.log('Final hexagram:', hexagram);
-  return hexagram;
+  return createHexagram(hexagram);
 };
 
 const TaijiIcon = ({ isGenerating }: { isGenerating: boolean }) => (
@@ -104,15 +91,32 @@ const getAIInterpretation = async (query: string, hexagram: Hexagram, hexagramIn
 };
 
 const generateChangedHexagram = (hexagram: Hexagram): Hexagram => {
-  return hexagram.map(line => {
+  return createHexagram(hexagram.map(line => {
     if (line === 6) return 7; // 老阴变少阳
     if (line === 9) return 8; // 老阳变少阴
     return line; // 少阴和少阳保持不变
-  });
+  }));
 };
 
-const hexagramToString = (hexagram: Hexagram): string => {
-  return hexagram.map(line => line % 2 === 0 ? '0' : '1').join('');
+const getInterpretationReason = (type: string, changingLinesCount: number): string => {
+  switch (type) {
+    case '卦辞':
+      return changingLinesCount === 0 ? '六爻不变，以本卦的卦辞和《彖辞》进行占断。' : '六爻皆变，以变卦的卦辞和《彖辞》进行占断。';
+    case '爻辞':
+      if (changingLinesCount === 1) return '一爻变，以本卦中变爻的爻辞进行占断。';
+      if (changingLinesCount === 2) return '两爻变，以本卦中两个变爻的爻辞进行占断，以上面的变爻（即位置靠上的变爻）的爻辞为主。';
+      if (changingLinesCount === 5) return '五爻变，以变卦中唯一不变爻的爻辞进行占断。';
+      return '';
+    case '综合解释':
+      return '三爻变，需以本卦和变卦的卦辞及《彖辞》进行占断，以本卦的卦辞为主。';
+    case '变卦爻辞':
+      return '四爻变，以变卦中两个不变爻的爻辞进行占断，以下面的不变爻（即位置靠下的不变爻）的爻辞为主。';
+    case '用九':
+    case '用六':
+      return '六爻皆变，本卦为乾卦或坤卦，分别以乾卦的"用九"或坤卦的"用六"进行占断。';
+    default:
+      return '';
+  }
 };
 
 export default function Home() {
@@ -122,6 +126,8 @@ export default function Home() {
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showInterpretation, setShowInterpretation] = useState<boolean>(false);
   const [aiInterpretation, setAiInterpretation] = useState<string>('');
+  const [interpretation, setInterpretation] = useState<InterpretationContent | null>(null);
+  const [changingLinesCount, setChangingLinesCount] = useState<number>(0);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -138,6 +144,7 @@ export default function Home() {
     setShowInterpretation(false);
     setHexagram(null);
     setChangedHexagram(null);
+    setInterpretation(null);
     setAiInterpretation('');
 
     // 模拟生成过程
@@ -149,8 +156,11 @@ export default function Home() {
     const newChangedHexagram = generateChangedHexagram(generatedHexagram);
     setChangedHexagram(newChangedHexagram);
 
-    // 计算变爻数量
-    const changingLines = generatedHexagram.filter((line, index) => line !== newChangedHexagram[index]).length;
+    const newChangingLinesCount = generatedHexagram.filter((line, index) => line !== newChangedHexagram[index]).length;
+    setChangingLinesCount(newChangingLinesCount);
+
+    const newInterpretation = getInterpretation(generatedHexagram, newChangedHexagram);
+    setInterpretation(newInterpretation);
 
     setIsGenerating(false);
 
@@ -167,7 +177,7 @@ export default function Home() {
 
   const handleAIInterpretation = async () => {
     if (!hexagram || !query) return;
-    const hexagramKey = hexagram.map(line => line % 2 === 0 ? '0' : '1').reverse().join('');
+    const hexagramKey = hexagram.toString();
     const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
     const interpretation = await getAIInterpretation(query, hexagram, hexagramInfo);
     setAiInterpretation(interpretation);
@@ -219,6 +229,33 @@ export default function Home() {
             />
           </Box>
         )}
+        {showInterpretation && interpretation && (
+          <Box 
+            mt={4} 
+            width="100%" 
+            maxWidth="600px" 
+            borderWidth={1} 
+            borderRadius="lg" 
+            p={4} 
+            boxShadow="md"
+          >
+            <Heading as="h3" size="md" mb={2}>解卦依据</Heading>
+            <Text fontSize="sm" fontStyle="italic" mb={2}>
+              {getInterpretationReason(interpretation.type, changingLinesCount)}
+            </Text>
+            {typeof interpretation.content === 'string' ? (
+              <Text mt={2}>{interpretation.content}</Text>
+            ) : (
+              <VStack align="start" spacing={2} mt={2}>
+                <Text><strong>本卦卦辞：</strong>{interpretation.content.mainGuaci}</Text>
+                <Text><strong>变卦卦辞：</strong>{interpretation.content.changedGuaci}</Text>
+                <Text><strong>本卦彖辞：</strong>{interpretation.content.mainTuanci}</Text>
+                <Text><strong>变卦彖辞：</strong>{interpretation.content.changedTuanci}</Text>
+                <Text fontSize="sm" fontStyle="italic">注：以本卦卦辞为主进行解卦</Text>
+              </VStack>
+            )}
+          </Box>
+        )}
         {showInterpretation && hexagram && (
           <Flex width="100%" justifyContent="space-between" alignItems="flex-start">
             <Box flex={1} mr={4}>
@@ -249,6 +286,3 @@ export default function Home() {
     </Container>
   );
 }
-
-console.log('OPENAI_API_KEY:', process.env.NEXT_PUBLIC_OPENAI_API_KEY);
-console.log('OPENAI_BASE_URL:', process.env.NEXT_PUBLIC_OPENAI_BASE_URL);
