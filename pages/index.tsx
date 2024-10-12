@@ -149,6 +149,9 @@ export default function Home() {
     const newChangedHexagram = generateChangedHexagram(generatedHexagram);
     setChangedHexagram(newChangedHexagram);
 
+    // 计算变爻数量
+    const changingLines = generatedHexagram.filter((line, index) => line !== newChangedHexagram[index]).length;
+
     setIsGenerating(false);
 
     // 等待卦象展示完成后显示解释
@@ -219,11 +222,19 @@ export default function Home() {
         {showInterpretation && hexagram && (
           <Flex width="100%" justifyContent="space-between" alignItems="flex-start">
             <Box flex={1} mr={4}>
-              <Interpretation hexagram={hexagram} />
+              <Interpretation 
+                hexagram={hexagram} 
+                changedHexagram={changedHexagram}
+                isChangedHexagram={false}
+              />
             </Box>
             {changedHexagram && (
               <Box flex={1} ml={4}>
-                <Interpretation hexagram={changedHexagram} isChangedHexagram />
+                <Interpretation 
+                  hexagram={changedHexagram} 
+                  changedHexagram={null}
+                  isChangedHexagram={true}
+                />
               </Box>
             )}
           </Flex>

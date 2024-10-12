@@ -6,33 +6,118 @@ type Hexagram = HexagramLine[];
 
 interface InterpretationProps {
   hexagram: Hexagram;
-  isChangedHexagram?: boolean;
+  changedHexagram: Hexagram | null;
+  isChangedHexagram: boolean;
 }
 
-const Interpretation: React.FC<InterpretationProps> = ({ hexagram, isChangedHexagram = false }) => {
+interface InterpretationContent {
+  type: string;
+  content: string | {
+    mainGuaci: string;
+    changedGuaci: string;
+    mainTuanci: string;
+    changedTuanci: string;
+  };
+}
+
+const Interpretation: React.FC<InterpretationProps> = ({ hexagram, changedHexagram, isChangedHexagram }) => {
   const interpretLine = (value: HexagramLine): string => {
     switch (value) {
-      case 6: return '老阴 (可能变化)';
+      case 6: return '老阴 (变化)';
       case 7: return '少阳 (不变)';
       case 8: return '少阴 (不变)';
-      case 9: return '老阳 (可能变化)';
+      case 9: return '老阳 (变化)';
       default: return '未知';
     }
   };
 
-  const hexagramKey = hexagram.map(line => line % 2 === 0 ? '0' : '1').join('');
+  const hexagramKey = hexagram.map(line => line % 2 === 0 ? '0' : '1').reverse().join('');
   const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
+
+  const getChangingLines = (): number[] => {
+    if (!changedHexagram) return [];
+    return hexagram.map((line, index) => (line === 6 || line === 9) ? index : -1).filter(index => index !== -1);
+  };
+
+  const changingLines = getChangingLines();
+  const changingLinesCount = changingLines.length;
+
+  const getInterpretation = (): InterpretationContent | null => {
+    if (!isChangedHexagram && changedHexagram) {
+      const changedHexagramKey = changedHexagram.map(line => line % 2 === 0 ? '0' : '1').reverse().join('');
+      const changedHexagramInfo = guaciData[changedHexagramKey as keyof typeof guaciData];
+
+      if (changingLinesCount === 0) {
+        return { type: '卦辞', content: hexagramInfo.guaci };
+      } else if (changingLinesCount === 1) {
+        return { type: '爻辞', content: hexagramInfo.yaoci[changingLines[0]] };
+      } else if (changingLinesCount === 2) {
+        const upperChangingLine = Math.max(...changingLines);
+        return { type: '爻辞', content: hexagramInfo.yaoci[upperChangingLine] };
+      } else if (changingLinesCount === 3) {
+        return { 
+          type: '综合解释', 
+          content: {
+            mainGuaci: hexagramInfo.guaci,
+            changedGuaci: changedHexagramInfo.guaci,
+            mainTuanci: hexagramInfo.tuan,
+            changedTuanci: changedHexagramInfo.tuan
+          }
+        };
+      } else if (changingLinesCount === 4) {
+        const unchangedLines = hexagram.map((line, index) => (line === 7 || line === 8) ? index : -1).filter(index => index !== -1);
+        const lowerUnchangedLine = Math.min(...unchangedLines);
+        const upperUnchangedLine = Math.max(...unchangedLines);
+        return { 
+          type: '变卦爻辞', 
+          content: `下爻：${changedHexagramInfo.yaoci[lowerUnchangedLine]}（主）\n上爻：${changedHexagramInfo.yaoci[upperUnchangedLine]}`
+        };
+      } else if (changingLinesCount === 5) {
+        const unchangedLine = hexagram.findIndex(line => line === 7 || line === 8);
+        return { type: '爻辞', content: changedHexagramInfo.yaoci[unchangedLine] };
+      } else if (changingLinesCount === 6) {
+        if (hexagramKey === '111111') {
+          return { type: '用九', content: hexagramInfo.yaoci[6] };
+        } else if (hexagramKey === '000000') {
+          return { type: '用六', content: hexagramInfo.yaoci[6] };
+        } else {
+          return { type: '卦辞', content: changedHexagramInfo.guaci };
+        }
+      }
+    }
+    return null;
+  };
+
+  const interpretation = getInterpretation();
 
   return (
     <Box mt={8}>
       <Heading as="h2" size="lg" mb={4}>
-        {isChangedHexagram ? '变卦解释' : '本卦解释'}
+        {isChangedHexagram ? '变卦' : '本卦'}
       </Heading>
       {hexagramInfo ? (
         <VStack align="start" spacing={4}>
-          <Text><strong>卦名：</strong>{hexagramInfo.name} ({hexagramInfo.fu})</Text>
-          <Text><strong>卦辞：</strong>{hexagramInfo.guaci}</Text>
-          <Text><strong>彖辞：</strong>{hexagramInfo.tuan}</Text>
+          <Text><strong>卦名：</strong>{hexagramInfo.name} (<Text as="span" fontSize="3xl">{hexagramInfo.fu}</Text>)</Text>
+          {!isChangedHexagram && interpretation && (
+            <>
+              <Text><strong>解卦依据（{interpretation.type}）：</strong></Text>
+              {interpretation.type === '综合解释' ? (
+                <>
+                  <Text><strong>本卦卦辞：</strong>{(interpretation.content as {mainGuaci: string}).mainGuaci}</Text>
+                  <Text><strong>变卦卦辞：</strong>{(interpretation.content as {changedGuaci: string}).changedGuaci}</Text>
+                  <Text><strong>本卦彖辞：</strong>{(interpretation.content as {mainTuanci: string}).mainTuanci}</Text>
+                  <Text><strong>变卦彖辞：</strong>{(interpretation.content as {changedTuanci: string}).changedTuanci}</Text>
+                  <Text><em>注：以本卦卦辞为主进行解卦</em></Text>
+                </>
+              ) : (
+                <Text>{interpretation.content as string}</Text>
+              )}
+            </>
+          )}
+          <Heading as="h3" size="md" mt={2}>卦辞</Heading>
+          <Text>{hexagramInfo.guaci}</Text>
+          <Heading as="h3" size="md" mt={2}>彖辞</Heading>
+          <Text>{hexagramInfo.tuan}</Text>
           <Heading as="h3" size="md" mt={2}>爻辞</Heading>
           {hexagram.map((line, index) => (
             <Text key={index}>
