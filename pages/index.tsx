@@ -69,7 +69,7 @@ const openai = new OpenAI({
     dangerouslyAllowBrowser: true,
 });
 
-const getAIInterpretation = async (query: string, hexagram: Hexagram, hexagramInfo: any) => {
+const getAIInterpretation = async (query: string, hexagram: Hexagram, hexagramInfo: any, interpretation: InterpretationContent, changingLinesCount: number) => {
   const hexagramLines = hexagram.map(line => line % 2 === 0 ? '0' : '1').reverse().join('');
   const systemPrompt = `
     你是一个专业的易经解读师，你的任务是根据用户输入的问题和卦象，给出详细的解读。
@@ -79,6 +79,8 @@ const getAIInterpretation = async (query: string, hexagram: Hexagram, hexagramIn
     卦象: ${hexagramLines}
     卦辞: ${hexagramInfo.guaci}
     ${hexagramInfo.bianGuaci ? `变卦的卦辞: ${hexagramInfo.bianGuaci}` : ''}
+    解卦依据: ${getInterpretationReason(interpretation.type, changingLinesCount)}
+    解释: ${typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}
   `;
 
   const response = await openai.chat.completions.create({
@@ -179,8 +181,8 @@ export default function Home() {
     if (!hexagram || !query) return;
     const hexagramKey = hexagram.toString();
     const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
-    const interpretation = await getAIInterpretation(query, hexagram, hexagramInfo);
-    setAiInterpretation(interpretation);
+    const aiInterpretation = await getAIInterpretation(query, hexagram, hexagramInfo, interpretation, changingLinesCount);
+    setAiInterpretation(aiInterpretation);
   };
 
   return (
@@ -243,17 +245,7 @@ export default function Home() {
             <Text fontSize="sm" fontStyle="italic" mb={2}>
               {getInterpretationReason(interpretation.type, changingLinesCount)}
             </Text>
-            {typeof interpretation.content === 'string' ? (
-              <Text mt={2}>{interpretation.content}</Text>
-            ) : (
-              <VStack align="start" spacing={2} mt={2}>
-                <Text><strong>本卦卦辞：</strong>{interpretation.content.mainGuaci}</Text>
-                <Text><strong>变卦卦辞：</strong>{interpretation.content.changedGuaci}</Text>
-                <Text><strong>本卦彖辞：</strong>{interpretation.content.mainTuanci}</Text>
-                <Text><strong>变卦彖辞：</strong>{interpretation.content.changedTuanci}</Text>
-                <Text fontSize="sm" fontStyle="italic">注：以本卦卦辞为主进行解卦</Text>
-              </VStack>
-            )}
+            <Text mt={2}>{typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}</Text>
           </Box>
         )}
         {showInterpretation && hexagram && (

@@ -34,12 +34,7 @@ export const getInterpretation = (hexagram: Hexagram, changedHexagram: Hexagram 
   } else if (changingLinesCount === 3) {
     return { 
       type: '综合解释', 
-      content: {
-        mainGuaci: hexagramInfo.guaci,
-        changedGuaci: changedHexagramInfo.guaci,
-        mainTuanci: hexagramInfo.tuan,
-        changedTuanci: changedHexagramInfo.tuan
-      }
+      content: `主卦卦辞: ${hexagramInfo.guaci}\n变卦卦辞: ${changedHexagramInfo.guaci}\n主卦彖辞: ${hexagramInfo.tuan}\n变卦彖辞: ${changedHexagramInfo.tuan}`
     };
   } else if (changingLinesCount === 4) {
     const unchangedLines = hexagram.map((line, index) => (line === 7 || line === 8) ? index : -1).filter(index => index !== -1);
