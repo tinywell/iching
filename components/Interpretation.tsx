@@ -6,9 +6,10 @@ type Hexagram = HexagramLine[];
 
 interface InterpretationProps {
   hexagram: Hexagram;
+  isChangedHexagram?: boolean;
 }
 
-const Interpretation: React.FC<InterpretationProps> = ({ hexagram }) => {
+const Interpretation: React.FC<InterpretationProps> = ({ hexagram, isChangedHexagram = false }) => {
   const interpretLine = (value: HexagramLine): string => {
     switch (value) {
       case 6: return '老阴 (可能变化)';
@@ -19,17 +20,17 @@ const Interpretation: React.FC<InterpretationProps> = ({ hexagram }) => {
     }
   };
 
-  const hexagramKey = hexagram.map(line => line % 2 === 0 ? '0' : '1').reverse().join('');
+  const hexagramKey = hexagram.map(line => line % 2 === 0 ? '0' : '1').join('');
   const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
 
   return (
     <Box mt={8}>
       <Heading as="h2" size="lg" mb={4}>
-        卦象解释
+        {isChangedHexagram ? '变卦解释' : '本卦解释'}
       </Heading>
       {hexagramInfo ? (
         <VStack align="start" spacing={4}>
-          <Text><strong>卦名：</strong>{hexagramInfo.name} <Text as="span" fontSize="3xl">({hexagramInfo.fu})</Text></Text>
+          <Text><strong>卦名：</strong>{hexagramInfo.name} ({hexagramInfo.fu})</Text>
           <Text><strong>卦辞：</strong>{hexagramInfo.guaci}</Text>
           <Text><strong>彖辞：</strong>{hexagramInfo.tuan}</Text>
           <Heading as="h3" size="md" mt={2}>爻辞</Heading>

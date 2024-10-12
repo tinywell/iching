@@ -103,9 +103,22 @@ const getAIInterpretation = async (query: string, hexagram: Hexagram, hexagramIn
   return response.choices[0].message.content.trim();
 };
 
+const generateChangedHexagram = (hexagram: Hexagram): Hexagram => {
+  return hexagram.map(line => {
+    if (line === 6) return 7; // 老阴变少阳
+    if (line === 9) return 8; // 老阳变少阴
+    return line; // 少阴和少阳保持不变
+  });
+};
+
+const hexagramToString = (hexagram: Hexagram): string => {
+  return hexagram.map(line => line % 2 === 0 ? '0' : '1').join('');
+};
+
 export default function Home() {
   const [query, setQuery] = useState<string>('');
   const [hexagram, setHexagram] = useState<Hexagram | null>(null);
+  const [changedHexagram, setChangedHexagram] = useState<Hexagram | null>(null);
   const [isGenerating, setIsGenerating] = useState<boolean>(false);
   const [showInterpretation, setShowInterpretation] = useState<boolean>(false);
   const [aiInterpretation, setAiInterpretation] = useState<string>('');
@@ -124,6 +137,7 @@ export default function Home() {
     setIsGenerating(true);
     setShowInterpretation(false);
     setHexagram(null);
+    setChangedHexagram(null);
     setAiInterpretation('');
 
     // 模拟生成过程
@@ -131,6 +145,10 @@ export default function Home() {
 
     const generatedHexagram = generateHexagramUsingYarrowMethod();
     setHexagram(generatedHexagram);
+    
+    const newChangedHexagram = generateChangedHexagram(generatedHexagram);
+    setChangedHexagram(newChangedHexagram);
+
     setIsGenerating(false);
 
     // 等待卦象展示完成后显示解释
@@ -153,7 +171,7 @@ export default function Home() {
   };
 
   return (
-    <Container maxW="container.md" centerContent>
+    <Container maxW="container.xl" centerContent>
       <VStack spacing={8} my={16}>
         <Heading as="h1" size="xl">大衍筮法</Heading>
         <Text textAlign="center" fontSize="md" color="gray.600">
@@ -192,10 +210,24 @@ export default function Home() {
         </VStack>
         {hexagram && (
           <Box mt={8} width="100%">
-            <HexagramDisplay hexagram={hexagram} />
+            <HexagramDisplay 
+              hexagram={hexagram} 
+              changedHexagram={changedHexagram} 
+            />
           </Box>
         )}
-        {showInterpretation && hexagram && <Interpretation hexagram={hexagram} />}
+        {showInterpretation && hexagram && (
+          <Flex width="100%" justifyContent="space-between" alignItems="flex-start">
+            <Box flex={1} mr={4}>
+              <Interpretation hexagram={hexagram} />
+            </Box>
+            {changedHexagram && (
+              <Box flex={1} ml={4}>
+                <Interpretation hexagram={changedHexagram} isChangedHexagram />
+              </Box>
+            )}
+          </Flex>
+        )}
         {aiInterpretation && (
           <Box mt={4} width="100%">
             <Heading as="h3" size="md">AI解读结果</Heading>
