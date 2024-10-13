@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Box, Container, Textarea, VStack, Heading, Button, Text, HStack, Flex, Center } from '@chakra-ui/react';
+import { Box, Container, Textarea, VStack, Heading, Button, Text, HStack, Flex, Center, Spinner } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import HexagramDisplay from '../components/HexagramDisplay';
 import Interpretation, { getInterpretation } from '../components/Interpretation';
@@ -75,12 +75,10 @@ const getAIInterpretation = async (query: string, hexagram: Hexagram, hexagramIn
     你是一个专业的易经解读师，你的任务是根据用户输入的问题和卦象，给出详细的解读。
   `;
   const prompt = `
-    用户输入: ${query}
-    卦象: ${hexagramLines}
-    卦辞: ${hexagramInfo.guaci}
-    ${hexagramInfo.bianGuaci ? `变卦的卦辞: ${hexagramInfo.bianGuaci}` : ''}
-    解卦依据: ${getInterpretationReason(interpretation.type, changingLinesCount)}
-    解释: ${typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}
+    用户占卜的问题: ${query}
+    卦象: ${hexagramInfo.name} (${hexagramInfo.fu})
+    解读方式为: ${getInterpretationReason(interpretation.type, changingLinesCount)}
+    解卦卦辞: ${typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}
   `;
 
   const response = await openai.chat.completions.create({
@@ -134,6 +132,7 @@ export default function Home() {
   const [aiInterpretation, setAiInterpretation] = useState<string>('');
   const [interpretation, setInterpretation] = useState<InterpretationContent | null>(null);
   const [changingLinesCount, setChangingLinesCount] = useState<number>(0);
+  const [isLoadingAI, setIsLoadingAI] = useState<boolean>(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -183,10 +182,40 @@ export default function Home() {
 
   const handleAIInterpretation = async () => {
     if (!hexagram || !query) return;
+    setIsLoadingAI(true);
+    setAiInterpretation('');
     const hexagramKey = hexagram.toString();
     const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
-    const aiInterpretation = await getAIInterpretation(query, hexagram, hexagramInfo, interpretation, changingLinesCount);
-    setAiInterpretation(aiInterpretation);
+    const systemPrompt = `
+    你是一个专业的易经解读师，你的任务是根据用户输入的问题和卦象，给出详细的解读。
+  `;
+  const prompt = `
+    用户占卜的问题: ${query}
+    卦象: ${hexagramInfo.name} (${hexagramInfo.fu})
+    解读方式为: ${getInterpretationReason(interpretation.type, changingLinesCount)}
+    解卦卦辞: ${typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}
+  `;
+
+    try {
+      const stream = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {role: "system", content: "You are an I Ching expert. Interpret the hexagram and provide insights based on the user's query."},
+          {role: "user", content: prompt}
+        ],
+        stream: true,
+      });
+
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || "";
+        setAiInterpretation((prev) => prev + content);
+      }
+    } catch (error) {
+      console.error('Error getting AI interpretation:', error);
+      setAiInterpretation('抱歉，获取 AI 解读时出现错误。');
+    } finally {
+      setIsLoadingAI(false);
+    }
   };
 
   return (
@@ -213,19 +242,6 @@ export default function Home() {
               <TaijiIcon isGenerating={isGenerating} />
             </Box>
           </Center>
-          <HStack spacing={4} width="100%">
-            <Button onClick={handleReset} colorScheme="red" flex={1}>
-              重置
-            </Button>
-            <Button 
-              onClick={handleAIInterpretation} 
-              colorScheme="blue" 
-              flex={1}
-              isDisabled={!showInterpretation || !hexagram}
-            >
-              AI解读
-            </Button>
-          </HStack>
         </VStack>
         {hexagram && (
           <Box mt={8} width="100%">
@@ -252,6 +268,37 @@ export default function Home() {
             <Text mt={2}>{typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}</Text>
           </Box>
         )}
+        <HStack spacing={4} width="100%" justifyContent="center">
+            {/* <Button onClick={handleReset} colorScheme="red" width="33%">
+              重置
+            </Button> */}
+            {showInterpretation && hexagram && (
+              <Button 
+                onClick={handleAIInterpretation} 
+                colorScheme="blue" 
+                width="33%"
+                isLoading={isLoadingAI}
+                loadingText="正在解读"
+              >
+                AI解读
+              </Button>
+            )}
+          </HStack>
+        {(isLoadingAI || aiInterpretation) && (
+          <Box 
+            mt={4} 
+            width="100%" 
+            maxWidth="600px" 
+            borderWidth={1} 
+            borderRadius="lg" 
+            p={4} 
+            boxShadow="md"
+          >
+            <Heading as="h3" size="md" mb={2}>AI 解读结果</Heading>
+            {isLoadingAI && <Spinner />}
+            <Text>{aiInterpretation}</Text>
+          </Box>
+        )}
         {showInterpretation && hexagram && (
           <Flex width="100%" justifyContent="space-between" alignItems="flex-start">
             <Box flex={1} mr={4}>
@@ -272,12 +319,7 @@ export default function Home() {
             )}
           </Flex>
         )}
-        {aiInterpretation && (
-          <Box mt={4} width="100%">
-            <Heading as="h3" size="md">AI解读结果</Heading>
-            <Text>{aiInterpretation}</Text>
-          </Box>
-        )}
+       
       </VStack>
     </Container>
   );
