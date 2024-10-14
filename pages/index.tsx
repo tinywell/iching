@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
-import { Box, Container, Textarea, VStack, Heading, Button, Text, HStack, Flex, Center, Spinner } from '@chakra-ui/react';
+import { Box, Container, Input, VStack, Heading, Button, Text, HStack, Center, Flex, Spinner } from '@chakra-ui/react';
 import { motion } from 'framer-motion';
 import HexagramDisplay from '../components/HexagramDisplay';
 import Interpretation, { getInterpretation } from '../components/Interpretation';
@@ -225,24 +225,18 @@ export default function Home() {
         <Text textAlign="center" fontSize="md" color="gray.600">
           输入你的问题，点击太极图标生成卦象。生成后可查看传统解释或使用AI进行解读。
         </Text>
-        <VStack spacing={4} width="100%">
-          <Textarea
-            ref={textareaRef}
+        <HStack spacing={4} width="100%" justifyContent="center">
+          <Input
             placeholder="输入你的占卜问题"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             size="lg"
-            width="100%"
-            minHeight="40px"
-            resize="none"
-            overflow="hidden"
+            width="50%"
           />
-          <Center width="100%">
-            <Box onClick={handleDivination} cursor="pointer">
-              <TaijiIcon isGenerating={isGenerating} />
-            </Box>
-          </Center>
-        </VStack>
+          <Box onClick={handleDivination} cursor="pointer">
+            <TaijiIcon isGenerating={isGenerating} />
+          </Box>
+        </HStack>
         {hexagram && (
           <Box mt={8} width="100%">
             <HexagramDisplay 
@@ -268,6 +262,21 @@ export default function Home() {
             <Text mt={2}>{typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}</Text>
           </Box>
         )}
+        {(isLoadingAI || aiInterpretation) && (
+          <Box 
+            mt={4} 
+            width="100%" 
+            maxWidth="600px" 
+            borderWidth={1} 
+            borderRadius="lg" 
+            p={4} 
+            boxShadow="md"
+          >
+            <Heading as="h3" size="md" mb={2}>AI 解读结果</Heading>
+            {isLoadingAI && <Spinner />}
+            <Text>{aiInterpretation}</Text>
+          </Box>
+        )}
         <HStack spacing={4} width="100%" justifyContent="center">
             {/* <Button onClick={handleReset} colorScheme="red" width="33%">
               重置
@@ -284,21 +293,7 @@ export default function Home() {
               </Button>
             )}
           </HStack>
-        {(isLoadingAI || aiInterpretation) && (
-          <Box 
-            mt={4} 
-            width="100%" 
-            maxWidth="600px" 
-            borderWidth={1} 
-            borderRadius="lg" 
-            p={4} 
-            boxShadow="md"
-          >
-            <Heading as="h3" size="md" mb={2}>AI 解读结果</Heading>
-            {isLoadingAI && <Spinner />}
-            <Text>{aiInterpretation}</Text>
-          </Box>
-        )}
+        
         {showInterpretation && hexagram && (
           <Flex width="100%" justifyContent="space-between" alignItems="flex-start">
             <Box flex={1} mr={4}>
