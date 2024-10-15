@@ -1,0 +1,12 @@
+version: '3'
+
+services:
+  i-ching-app:
+    image: tinywell/iching:nextjs
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_OPENAI_API_KEY=${NEXT_PUBLIC_OPENAI_API_KEY}
+      - NEXT_PUBLIC_OPENAI_BASE_URL=${NEXT_PUBLIC_OPENAI_BASE_URL}

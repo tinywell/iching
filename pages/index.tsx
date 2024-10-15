@@ -186,34 +186,39 @@ export default function Home() {
     setAiInterpretation('');
     const hexagramKey = hexagram.toString();
     const hexagramInfo = guaciData[hexagramKey as keyof typeof guaciData];
-    const systemPrompt = `
-    你是一个专业的易经解读师，你的任务是根据用户输入的问题和卦象，给出详细的解读。
-  `;
-  const prompt = `
-    用户占卜的问题: ${query}
-    卦象: ${hexagramInfo.name} (${hexagramInfo.fu})
-    解读方式为: ${getInterpretationReason(interpretation.type, changingLinesCount)}
-    解卦卦辞: ${typeof interpretation.content === 'string' ? interpretation.content : JSON.stringify(interpretation.content)}
-  `;
 
+    const interpretationReason = getInterpretationReason(interpretation.type, changingLinesCount);
     try {
-      const stream = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {role: "system", content: "You are an I Ching expert. Interpret the hexagram and provide insights based on the user's query."},
-          {role: "user", content: prompt}
-        ],
-        stream: true,
+      const response = await fetch('/api/interpret', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ query, hexagramInfo, interpretation, interpretationReason }),
       });
 
-      for await (const chunk of stream) {
-        const content = chunk.choices[0]?.delta?.content || "";
-        setAiInterpretation((prev) => prev + content);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader!.read();
+        if (done) break;
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+        lines.forEach((line) => {
+          if (line.startsWith('data: ')) {
+            const content = line.slice(6);
+            if (content === '[DONE]') {
+              setIsLoadingAI(false);
+            } else {
+              setAiInterpretation((prev) => prev + content);
+            }
+          }
+        });
       }
     } catch (error) {
       console.error('Error getting AI interpretation:', error);
       setAiInterpretation('抱歉，获取 AI 解读时出现错误。');
-    } finally {
       setIsLoadingAI(false);
     }
   };
