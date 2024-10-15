@@ -17,7 +17,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
     `;
     try {
       const stream = await openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
+        model: process.env.OPENAI_MODEL,
         messages: [
           {role: "system", content: "You are an I Ching expert. Interpret the hexagram and provide insights based on the user's query."},
           {role: "user", content: prompt}
